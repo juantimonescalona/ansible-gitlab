@@ -1,17 +1,76 @@
 
 # Install and configure the necessary dependencies
-sudo yum install -y curl policycoreutils-python openssh-server
-sudo systemctl enable sshd
-sudo systemctl start sshd
-sudo firewall-cmd --permanent --add-service=http
-sudo firewall-cmd --permanent --add-service=https
-sudo systemctl reload firewalld
+#  sudo yum install -y curl policycoreutils-python openssh-server
+#  sudo systemctl enable sshd
+#  sudo systemctl start sshd
+#  sudo firewall-cmd --permanent --add-service=http
+#  sudo firewall-cmd --permanent --add-service=https
+#  sudo systemctl reload firewalld
+
+# Install GitLab and its dependencies.
+- name: Install GitLab dependencies.
+  package: name={{ item }} state=present
+  with_items:
+    - policycoreutils-python
+    - openssh-server
+    - postfix
+    - curl
+    - openssl
+    - tzdata
+  tags:
+    - gitlab
+
+- name: Start and enable sshd
+  service:
+    name: "sshd"
+    enabled: yes
+    state: started
+  tags:
+    - gitlab
+
+- name: Enable https in firewalld
+  firewalld:
+    service: https
+    permanent: yes
+    immediate: yes
+    state: enabled
+  tags:
+    - gitlab
+
+- name: Enable http in firewalld
+  firewalld:
+    service: http
+    permanent: yes
+    immediate: yes
+    state: enabled
+  tags:
+    - gitlab
 
 # Install Postfix
-sudo yum install postfix
-sudo systemctl enable postfix
-sudo systemctl start postfix
+#sudo yum install postfix
+#sudo systemctl enable postfix
+#sudo systemctl start postfix
+
+- name: Start and enable sshd
+  service:
+    name: "postfix"
+    enabled: yes
+    state: started
+  tags:
+    - gitlab
 
 # Gitlab Package and Install
-curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | sudo bash
-sudo EXTERNAL_URL="{{ gitlab_url_service }}" yum install -y gitlab-ee
+#curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | sudo bash
+#sudo EXTERNAL_URL="{{ gitlab_url_service }}" yum install -y gitlab-ee
+
+- name: Download and Execute rpm script
+  command: "curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | bash"
+  become: true
+  tags:
+    - gitlab
+
+- name: Download and Execute rpm script
+  command: "EXTERNAL_URL={{ gitlab_url_service }} yum install -y gitlab-ee"
+  become: true
+  tags:
+    - gitlab
