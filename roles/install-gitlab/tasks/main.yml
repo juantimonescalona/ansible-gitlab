@@ -6,6 +6,10 @@
 #  sudo firewall-cmd --permanent --add-service=http
 #  sudo firewall-cmd --permanent --add-service=https
 #  sudo systemctl reload firewalld
+- name: ansible create directory 
+  file:
+    path: /tmp/ansible-tmp
+    state: directory
 
 - name: upgrade all packages
   yum: name=* state=latest
@@ -72,19 +76,21 @@
 #sudo EXTERNAL_URL="{{ gitlab_url_service }}" yum install -y gitlab-ee
 
 - name: Download rpm script
-  command: "curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh"
+  command: "curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh -o /tmp/ansible-tmp/script.rpm.sh "
   become: true
   tags:
     - gitlab
 
 - name: Execute rpm script
   shell: " os=el dist=7 bash script.rpm.sh"
+  args:
+    chdir: /tmp/ansible-tmp/
   become: true
   tags:
     - gitlab
 
-- name: Download and Execute rpm script
-  command: "EXTERNAL_URL={{ gitlab_url_service }} yum install -y gitlab-ee"
+- name: Install package with yum
+  command: "yum install -y gitlab-ee EXTERNAL_URL={{ gitlab_url_service }}"
   become: true
   tags:
     - gitlab
