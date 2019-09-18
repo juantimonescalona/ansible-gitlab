@@ -1,5 +1,8 @@
 - hosts: all
   remote_user: vagrant
   become: yes
+  vars:
+     gitlab_url_service: "http://192.168.21.120"
   roles:
      - install-gitlab
+
