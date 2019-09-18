@@ -1,9 +1,5 @@
-# file: centos7-vagrant.yml
-
- - hosts: servers
-   become: yes
-   become_method: sudo
-   serial: 1
-
-   roles:
+- hosts: all
+  remote_user: vagrant
+  become: yes
+  roles:
      - install-gitlab

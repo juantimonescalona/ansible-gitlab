@@ -7,7 +7,11 @@
 #  sudo firewall-cmd --permanent --add-service=https
 #  sudo systemctl reload firewalld
 
+- name: upgrade all packages
+  yum: name=* state=latest
+
 # Install GitLab and its dependencies.
+
 - name: Install GitLab dependencies.
   package: name={{ item }} state=present
   with_items:
@@ -17,6 +21,7 @@
     - curl
     - openssl
     - tzdata
+    - firewalld
   tags:
     - gitlab
 
@@ -28,23 +33,26 @@
   tags:
     - gitlab
 
-- name: Enable https in firewalld
-  firewalld:
-    service: https
-    permanent: yes
-    immediate: yes
-    state: enabled
-  tags:
-    - gitlab
+#- name: Enable https in firewalld
+#  firewalld:
+#    zone: dmz
+#    service: https
+#    permanent: yes
+#    immediate: True
+#    state: enabled
+#  tags:
+#    - gitlab
 
-- name: Enable http in firewalld
-  firewalld:
-    service: http
-    permanent: yes
-    immediate: yes
-    state: enabled
-  tags:
-    - gitlab
+#- name: Enable http in firewalld
+#  firewalld:
+#    zone: dmz
+#    service: http
+#    permanent: yes
+#    immediate: True
+#    state: enabled
+#  tags:
+#    - gitlab
+
 
 # Install Postfix
 #sudo yum install postfix
@@ -63,8 +71,14 @@
 #curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | sudo bash
 #sudo EXTERNAL_URL="{{ gitlab_url_service }}" yum install -y gitlab-ee
 
-- name: Download and Execute rpm script
-  command: "curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh | bash"
+- name: Download rpm script
+  command: "curl https://packages.gitlab.com/install/repositories/gitlab/gitlab-ee/script.rpm.sh"
+  become: true
+  tags:
+    - gitlab
+
+- name: Execute rpm script
+  shell: " os=el dist=7 bash script.rpm.sh"
   become: true
   tags:
     - gitlab
